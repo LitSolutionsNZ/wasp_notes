@@ -1,0 +1,28 @@
+# Build stage for client
+FROM node:20.0.0-alpine3.17 AS client-builder
+WORKDIR /app
+
+# Copy client source and dependencies
+COPY .wasp/build/web-app ./web-app
+COPY package.json .
+COPY package-lock.json .
+COPY src ./src
+
+# Install dependencies and build client
+RUN npm install
+RUN cd web-app && npm install
+RUN cd web-app && npm run build
+
+# Production stage with nginx
+FROM nginx:alpine AS production
+
+# Copy nginx configuration
+COPY nginx.client.conf /etc/nginx/nginx.conf
+
+RUN mkdir -p /usr/share/nginx/html
+
+# Expose port 3000
+EXPOSE 3000
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"] 
