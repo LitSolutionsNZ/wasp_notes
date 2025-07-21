@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Replace <app-name> with your actual application name
+APP_NAME="pospay-saas"
+
 # Define colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -41,8 +44,6 @@ cleanup_docker() {
     docker system df
 }
 
-# Replace <app-name> with your actual application name
-APP_NAME="pospay-saas"
 
 export PATH=$PATH:/home/pospay/.local/bin
 
@@ -94,32 +95,22 @@ print_msg "Building the React app..."
 # Hard-coded environment variables for production
 print_msg "Setting hard-coded environment variables for production build..."
 
-# Set production environment variables
-#export REACT_APP_API_URL=https://app.pospay.nz
-#export REACT_APP_GOOGLE_ANALYTICS_ID=G-KF9GFT9FJ2
-#export REACT_APP_GOOGLE_RECAPTCHA_SITE_KEY=6LfrKnIrAAAAAPUVwzObImTn4gJhktNI8pBSNs_O
-#export REACT_APP_GOOGLE_MAPS_API_KEY=AIzaSyCAgLRtyILZpT90qwK2Lj_G4HyZKauKT2w
-
 # For multi-tenant subdomain support, don't set WASP_WEB_CLIENT_URL
 # This forces the client to use relative URLs instead of hardcoded domain
 unset WASP_WEB_CLIENT_URL
 unset WASP_SERVER_URL
 
+print_msg "Loading variables into environment..."
 export $(grep -v '^#' ~/"$APP_NAME"/.env.client | xargs)
 
+print_msg "Check the variables are populated"
 echo -e "${YELLOW}REACT_APP_API_URL: ${REACT_APP_API_URL}${NC}"
 echo -e "${YELLOW}REACT_APP_GOOGLE_ANALYTICS_ID: ${REACT_APP_GOOGLE_ANALYTICS_ID}${NC}"
 echo -e "${YELLOW}REACT_APP_GOOGLE_RECAPTCHA_SITE_KEY: ${REACT_APP_GOOGLE_RECAPTCHA_SITE_KEY}${NC}"
 echo -e "${YELLOW}REACT_APP_GOOGLE_MAPS_API_KEY: ${REACT_APP_GOOGLE_MAPS_API_KEY}${NC}"
 
-# Build without dotenv, using hard-coded variables
+# Build without dotenv, using environment variables
 npm run build || { echo -e "${RED}React build failed!${NC}"; exit 1; }
-
-print_msg "Copying built files to the client directory..."
-#rm -rf ~/"$APP_NAME"/web-client/*
-rm -rf ~/pospay-saas/web-client/*
-#mkdir ~/"$APP_NAME"/web-client
-cp -R ~/"$APP_NAME"/.wasp/build/web-app/build/* ~/"$APP_NAME"/web-client/ || { echo -e "${RED}Failed to copy files!${NC}"; exit 1; }
 
 print_msg "Navigating to the project directory..."
 cd ~/"$APP_NAME" || { echo -e "${RED}Failed to change directory to ~/${APP_NAME}!${NC}"; exit 1; }
